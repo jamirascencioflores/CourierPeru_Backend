@@ -3,12 +3,14 @@ package com.courierperu.orders.application.service;
 import com.courierperu.orders.application.usecases.ManageOrderUseCase;
 import com.courierperu.orders.domain.model.Order;
 import com.courierperu.orders.domain.ports.out.OrderRepositoryPort;
+import com.courierperu.orders.domain.ports.out.ReniecPort;
 import com.courierperu.orders.infrastructure.adapters.out.feign.ShippingFeignClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate; // Import correcto
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -19,6 +21,8 @@ public class OrderService implements ManageOrderUseCase {
     private final OrderRepositoryPort orderRepositoryPort;
     private final ShippingFeignClient shippingFeignClient;
     private final RabbitTemplate rabbitTemplate;
+    private final ReniecPort reniecPort; // Inyéctalo en el constructor
+
 
     @Override
     public Order createOrder(Order order) {
@@ -75,5 +79,62 @@ public class OrderService implements ManageOrderUseCase {
         }
 
         return orderGuardada;
+    }
+
+    @Override
+    public List<Order> getAllOrders() {
+        return orderRepositoryPort.findAll();
+    }
+
+    @Override
+    public Order avanzarEstado(Long id) {
+        Order order = orderRepositoryPort.findById(id)
+                .orElseThrow(() -> new RuntimeException("Orden no encontrada"));
+
+        if ("PENDIENTE".equals(order.getEstado()) || "PENDIENTE_RECOJO".equals(order.getEstado())) {
+            order.setEstado("EN_RUTA");
+
+            // ✨ NUEVO: Notificamos que ya está en camino
+            try {
+                String mensaje = "¡Hola! Tu paquete con rastreo " + order.getCodigoRastreo() + " ya está EN RUTA hacia su destino.";
+                rabbitTemplate.convertAndSend("cola.correos", mensaje);
+                log.info("📧 Notificación de EN_RUTA enviada a RabbitMQ");
+            } catch (Exception e) {
+                log.error("❌ Error al notificar en_ruta", e);
+            }
+
+        } else if ("EN_RUTA".equals(order.getEstado())) {
+            order.setEstado("ENTREGADO");
+
+            // ✨ ESTE YA LO TENÍAS: Notificamos que se entregó
+            try {
+                String mensaje = "¡Hola! Tu paquete con rastreo " + order.getCodigoRastreo() + " ha sido ENTREGADO con éxito.";
+                rabbitTemplate.convertAndSend("cola.correos", mensaje);
+                log.info("📧 Notificación de entrega enviada a RabbitMQ");
+            } catch (Exception e) {
+                log.error("❌ Error al notificar entrega", e);
+            }
+        }
+
+        return orderRepositoryPort.save(order);
+    }
+    public Order findByCodigoRastreo(String codigoRastreo) {
+        return orderRepositoryPort.findByCodigoRastreo(codigoRastreo)
+                .orElseThrow(() -> new RuntimeException("Orden no encontrada"));
+    }
+
+    @Override
+    public String consultarClientePorDni(String dni) {
+        return reniecPort.obtenerNombreCompleto(dni);
+    }
+
+    @Override
+    public List<Order> obtenerOrdenesPorRol(String username, String role) {
+        // Si es administrador, le damos todo el historial
+        if ("ADMIN".equals(role) || "ROLE_ADMIN".equals(role)) {
+            return orderRepositoryPort.findAll();
+        }
+        // Si es cliente normal, solo le damos sus propias órdenes
+        return orderRepositoryPort.findByUsuarioUsername(username);
     }
 }

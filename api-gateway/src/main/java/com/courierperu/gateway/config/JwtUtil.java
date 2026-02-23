@@ -21,4 +21,15 @@ public class JwtUtil {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET);
         return Keys.hmacShaKeyFor(keyBytes);
     }
+    public String extractRole(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignKey()) // Tu método actual que obtiene la llave
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("role", String.class); // Asegúrate de que "role" sea el nombre correcto en tu JWT
+    }
+    public String extractUsername(String token) {
+        return Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJws(token).getBody().getSubject();
+    }
 }

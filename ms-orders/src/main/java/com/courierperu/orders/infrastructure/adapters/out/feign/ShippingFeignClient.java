@@ -9,6 +9,6 @@ public interface ShippingFeignClient {
 
     record ShippingRateDto(Double costo, String fechaEstimada, String tipoServicio) {}
 
-    @GetMapping("/api/shipping/calculate")
+    @GetMapping("/api/shipping/calcular")
     ShippingRateDto calcular(@RequestParam("peso") Double peso);
 }

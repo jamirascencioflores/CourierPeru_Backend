@@ -6,37 +6,60 @@ spring:
     name: api-gateway
   cloud:
     gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:4200"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+
       discovery:
         locator:
           enabled: true
       routes:
+        # 1. RUTAS PÚBLICAS
         - id: auth-route
           uri: lb://MS-AUTH
           predicates:
             - Path=/auth/**
 
-        - id: orders-route
+        - id: tracking-public-route
+          uri: lb://MS-ORDERS
+          predicates:
+            - Path=/api/orders/tracking/**
+
+        - id: shipping-public-route
+          uri: lb://MS-SHIPPING
+          predicates:
+            - Path=/api/shipping/calcular/**
+
+        # 2. RUTAS PROTEGIDAS
+        - id: orders-protected-route
           uri: lb://MS-ORDERS
           predicates:
             - Path=/api/orders/**
           filters:
             - AuthenticationFilter
 
-        # --- NUEVA RUTA: SHIPPING ---
-        - id: shipping-route
+        - id: shipping-protected-route
           uri: lb://MS-SHIPPING
           predicates:
             - Path=/api/shipping/**
           filters:
             - AuthenticationFilter
 
-        # --- NUEVA RUTA: NOTIFICATIONS ---
         - id: notifications-route
           uri: lb://MS-NOTIFICATIONS
           predicates:
             - Path=/api/notifications/**
           filters:
             - AuthenticationFilter
+
 eureka:
   client:
     service-url:

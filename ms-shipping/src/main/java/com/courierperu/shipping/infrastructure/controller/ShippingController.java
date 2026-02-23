@@ -9,8 +9,8 @@ import java.time.LocalDate;
 @RequestMapping("/api/shipping")
 public class ShippingController {
 
-    @GetMapping("/calculate")
-    public ResponseEntity<ShippingRate> calculate(@RequestParam Double peso) {
+    @GetMapping("/calcular")
+    public ResponseEntity<ShippingRate> calcular(@RequestParam Double peso) {
 
         // Simulación de lógica de negocio compleja
         Double tarifaBase = 10.0;

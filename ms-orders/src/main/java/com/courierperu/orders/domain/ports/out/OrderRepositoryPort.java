@@ -8,4 +8,6 @@ public interface OrderRepositoryPort {
     Order save(Order order);
     Optional<Order> findById(Long id);
     List<Order> findAll();
+    Optional<Order> findByCodigoRastreo(String codigoRastreo);
+    List<Order> findByUsuarioUsername(String username);
 }

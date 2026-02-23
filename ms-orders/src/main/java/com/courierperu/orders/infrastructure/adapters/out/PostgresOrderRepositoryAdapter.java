@@ -30,4 +30,14 @@ public class PostgresOrderRepositoryAdapter implements OrderRepositoryPort {
     public List<Order> findAll() {
         return jpaRepository.findAll();
     }
+
+    @Override
+    public Optional<Order> findByCodigoRastreo(String codigoRastreo) {
+        return jpaRepository.findByCodigoRastreo(codigoRastreo);
+    }
+
+    @Override
+    public List<Order> findByUsuarioUsername(String username) {
+        return jpaRepository.findByUsuarioUsername(username);
+    }
 }

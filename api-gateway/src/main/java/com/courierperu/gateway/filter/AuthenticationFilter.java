@@ -41,10 +41,24 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 }
 
                 try {
-                    // 2. Validar el Token
+                    // 1. Validar el Token
                     jwtUtil.validateToken(authHeader);
+
+                    // 2. Extraer el rol y el usuario (NUEVO)
+                    String role = jwtUtil.extractRole(authHeader);
+                    String username = jwtUtil.extractUsername(authHeader); // ✨ Extraemos el usuario
+
+                    // 3. Mutamos la petición para inyectar AMBOS headers ocultos
+                    org.springframework.http.server.reactive.ServerHttpRequest request = exchange.getRequest()
+                            .mutate()
+                            .header("X-User-Role", role)
+                            .header("X-User-Name", username) // ✨ Inyectamos el usuario
+                            .build();
+
+                    // Pasamos la petición modificada al siguiente nivel
+                    return chain.filter(exchange.mutate().request(request).build());
+
                 } catch (Exception e) {
-                    // Si el token expiró o es falso, devolvemos 401
                     return onError(exchange, "Token no válido o expirado", HttpStatus.UNAUTHORIZED);
                 }
             }

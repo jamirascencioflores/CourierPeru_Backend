@@ -18,6 +18,8 @@ public class Order {
 
     private String codigoRastreo; // Ej: CP-2024-001
     private String dniCliente;
+    private String nombreCompleto;
+    private String usuarioUsername;
     private String direccionRecojo;
     private String direccionEntrega;
     private Double pesoPaquete; // En Kg

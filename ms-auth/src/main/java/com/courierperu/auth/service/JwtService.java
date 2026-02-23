@@ -14,12 +14,12 @@ import java.util.Map;
 @Service
 public class JwtService {
 
-    // IMPORTANTE: Esta clave debe ser larga (mínimo 32 caracteres) y secreta
-    // En producción iría en variables de entorno.
     public static final String SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
 
-    public String createToken(String userName) {
+    // 1. Modificamos para recibir el userName y el role
+    public String createToken(String userName, String role) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role); // <-- MÁGIA: Guardamos el rol aquí
         return createToken(claims, userName);
     }
 

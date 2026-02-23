@@ -6,8 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -16,19 +14,27 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    // Guardar usuario encriptado
     public AuthUser saveUser(AuthUser user) {
+
+        if (repository.existsByEmail(user.getEmail())) {
+            throw new RuntimeException("El email ya está registrado");
+        }
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+
         if (user.getRole() == null || user.getRole().isEmpty()) {
             user.setRole("USER");
         }
+
         return repository.save(user);
     }
 
-    // Generar token si el usuario es válido
+    // 2. Buscamos el usuario en la BD para sacar su rol real
     public String generateToken(String username) {
-        return jwtService.createToken(username);
-    }
+        AuthUser user = repository.findByUserName(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-    // (Opcional) Validar credenciales manualmente si no usamos AuthenticationManager directo
+        // Pasamos el username y el rol al JwtService
+        return jwtService.createToken(username, user.getRole());
+    }
 }
