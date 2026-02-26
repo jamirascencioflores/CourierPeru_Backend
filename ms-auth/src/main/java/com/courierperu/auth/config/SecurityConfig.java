@@ -23,7 +23,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Desactivar CSRF para APIs
                 .authorizeHttpRequests(auth -> auth
                         // Permitir entrar a Login y Registro sin token
-                        .requestMatchers("/auth/register", "/auth/login").permitAll()
+                        .requestMatchers("/auth/register", "/auth/login" , "/auth/perfil").permitAll()
                         .anyRequest().authenticated()
                 )
                 .build();

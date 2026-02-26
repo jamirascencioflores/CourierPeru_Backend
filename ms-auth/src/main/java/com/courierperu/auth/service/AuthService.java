@@ -15,17 +15,11 @@ public class AuthService {
     private final JwtService jwtService;
 
     public AuthUser saveUser(AuthUser user) {
-
         if (repository.existsByEmail(user.getEmail())) {
             throw new RuntimeException("El email ya está registrado");
         }
-
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        if (user.getRole() == null || user.getRole().isEmpty()) {
-            user.setRole("USER");
-        }
-
+        user.setRole("USER");
         return repository.save(user);
     }
 
@@ -34,7 +28,10 @@ public class AuthService {
         AuthUser user = repository.findByUserName(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Pasamos el username y el rol al JwtService
         return jwtService.createToken(username, user.getRole());
+    }
+    public AuthUser getUserDetails(String username) {
+        return repository.findByUserName(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
 }

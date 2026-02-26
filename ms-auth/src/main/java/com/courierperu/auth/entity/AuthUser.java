@@ -1,5 +1,6 @@
 package com.courierperu.auth.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,14 +11,17 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor @AllArgsConstructor
 @Builder
+
 public class AuthUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String userName;
+
+    @JsonIgnore
     private String password;
+
     private String email;
-    private String role; // "ADMIN", "USER"
+    private String role;
 }

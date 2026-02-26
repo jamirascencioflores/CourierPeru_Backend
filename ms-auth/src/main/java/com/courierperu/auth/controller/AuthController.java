@@ -4,6 +4,7 @@ import com.courierperu.auth.dto.AuthRequest;
 import com.courierperu.auth.entity.AuthUser;
 import com.courierperu.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -39,5 +40,17 @@ public class AuthController {
             System.out.println("ERROR EN LOGIN: " + e.getMessage());
             return "Error: " + e.getMessage();
         }
+    }
+
+    @GetMapping("/perfil")
+    public ResponseEntity<AuthUser> getProfile(
+            @RequestHeader(value = "X-User-Name", required = false) String username) {
+        // ✨ RADAR MS-AUTH
+        System.out.println("📨 MS-AUTH: Petición a /perfil recibida. Header X-User-Name: " + username);
+        if (username == null) {
+            System.out.println("❌ MS-AUTH: Bloqueando petición porque el header es nulo.");
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(service.getUserDetails(username));
     }
 }

@@ -16,7 +16,15 @@ public class RouteValidator {
     );
 
     public Predicate<ServerHttpRequest> isSecured =
-            request -> openApiEndpoints
-                    .stream()
-                    .noneMatch(uri -> request.getURI().getPath().contains(uri));
+            request -> {
+                // ✨ LA MAGIA: Dejamos pasar las peticiones OPTIONS del navegador libres
+                if (request.getMethod().name().equals("OPTIONS")) {
+                    return false;
+                }
+
+                // Para el resto (GET, POST, etc), aplicamos tu regla normal
+                return openApiEndpoints
+                        .stream()
+                        .noneMatch(uri -> request.getURI().getPath().contains(uri));
+            };
 }
