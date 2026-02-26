@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -16,14 +15,33 @@ public class AddressController {
 
     private final AddressService addressService;
 
-    // ✨ Extrae el usuario del Token JWT automáticamente
+    // ✨ Ahora recibimos el usuario por el Header "X-User-Name"
     @GetMapping
-    public ResponseEntity<List<Address>> misDirecciones(Principal principal) {
-        return ResponseEntity.ok(addressService.listarMisDirecciones(principal.getName()));
+    public ResponseEntity<List<Address>> misDirecciones(
+            @RequestHeader("X-User-Name") String username) {
+        return ResponseEntity.ok(addressService.listarMisDirecciones(username));
     }
 
     @PostMapping
-    public ResponseEntity<Address> agregarDireccion(@RequestBody Address address, Principal principal) {
-        return ResponseEntity.ok(addressService.agregarDireccion(principal.getName(), address));
+    public ResponseEntity<Address> agregarDireccion(
+            @RequestBody Address address,
+            @RequestHeader("X-User-Name") String username) {
+        return ResponseEntity.ok(addressService.agregarDireccion(username, address));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Address> editDireccion(
+            @PathVariable Long id,
+            @RequestBody Address address,
+            @RequestHeader("X-User-Name") String username) {
+        return ResponseEntity.ok(addressService.editDireccion(id, username, address));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarDireccion(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Name") String username) {
+        addressService.eliminarDireccion(id, username);
+        return ResponseEntity.noContent().build();
     }
 }

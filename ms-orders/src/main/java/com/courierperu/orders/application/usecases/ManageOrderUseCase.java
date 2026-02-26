@@ -11,4 +11,7 @@ public interface ManageOrderUseCase {
     Order findByCodigoRastreo(String codigoRastreo);
     String consultarClientePorDni(String dni);
     List<Order> obtenerOrdenesPorRol(String username, String role);
+
+    Order actualizarEstado(Long id, String estado, String rol);
+    void eliminarOrden(Long id, String rol);
 }

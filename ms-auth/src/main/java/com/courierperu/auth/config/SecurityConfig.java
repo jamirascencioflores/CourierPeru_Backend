@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -20,10 +21,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(AbstractHttpConfigurer::disable) // Desactivar CSRF para APIs
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // Permitir entrar a Login y Registro sin token
-                        .requestMatchers("/auth/register", "/auth/login" , "/auth/perfil").permitAll()
+                        .requestMatchers("/auth/register", "/auth/login", "/auth/perfil", "/auth/direcciones/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .build();
@@ -42,4 +42,5 @@ public class SecurityConfig {
         authProvider.setPasswordEncoder(passwordEncoder);
         return new ProviderManager(authProvider);
     }
+
 }

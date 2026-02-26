@@ -9,6 +9,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/auth")
@@ -24,21 +26,27 @@ public class AuthController {
         return "Usuario registrado con éxito";
     }
 
-    @PostMapping("/login")
-    public String getToken(@RequestBody AuthRequest authRequest) {
+    @PostMapping(value = "/login", produces = "application/json")
+    public ResponseEntity<?> getToken(@RequestBody AuthRequest authRequest) { // Cambiamos a ResponseEntity<?>
         try {
             Authentication authenticate = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword())
             );
 
             if (authenticate.isAuthenticated()) {
-                return service.generateToken(authRequest.getUserName());
+                String token = service.generateToken(authRequest.getUserName());
+
+                // ✨ CREAMOS UN MAPA PARA QUE SPRING LO CONVIERTA A JSON {"token": "ey..."}
+                Map<String, String> response = new HashMap<>();
+                response.put("token", token);
+
+                return ResponseEntity.ok(response);
             }
-            return "No autenticado";
+
+            return ResponseEntity.status(401).body(Map.of("error", "Usuario no autenticado"));
         } catch (Exception e) {
-            // Esto imprimirá el error real en la consola de IntelliJ
             System.out.println("ERROR EN LOGIN: " + e.getMessage());
-            return "Error: " + e.getMessage();
+            return ResponseEntity.status(401).body(Map.of("error", "Credenciales incorrectas: " + e.getMessage()));
         }
     }
 

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.List; // Importar List
 
@@ -34,20 +35,6 @@ public class OrderController {
         return ResponseEntity.ok(manageOrderUseCase.obtenerOrdenesPorRol(username, role));
     }
 
-    @PutMapping("/{id}/estado")
-    public ResponseEntity<?> avanzarEstado(
-            @PathVariable Long id,
-            @RequestHeader(value = "X-User-Role", required = false) String role) { // ✨ Leemos el header
-
-        if (!"ADMIN".equals(role) && !"ROLE_ADMIN".equals(role)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Acceso denegado: Esta acción es exclusiva para administradores.");
-        }
-
-        Order orderActualizada = manageOrderUseCase.avanzarEstado(id);
-        return ResponseEntity.ok(orderActualizada);
-    }
-
     @GetMapping("/tracking/{codigo}")
     public ResponseEntity<Order> rastrearPedido(@PathVariable String codigo) {
         return ResponseEntity.ok(manageOrderUseCase.findByCodigoRastreo(codigo));
@@ -56,6 +43,29 @@ public class OrderController {
     @GetMapping("/cliente/{dni}")
     public ResponseEntity<String> consultarCliente(@PathVariable String dni) {
         return ResponseEntity.ok(manageOrderUseCase.consultarClientePorDni(dni));
+    }
+
+    // PUT: Para EDITAR (Cambiar a EN_RUTA, ENTREGADO, etc.)
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<?> updateEstado(@PathVariable Long id, @RequestBody String estado, Authentication auth) {
+        try {
+            String rol = auth.getAuthorities().iterator().next().getAuthority();
+            return ResponseEntity.ok(manageOrderUseCase.actualizarEstado(id, estado, rol));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado: " + e.getMessage());
+        }
+    }
+
+    // DELETE: Para ELIMINAR de la base de datos
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteOrder(@PathVariable Long id, Authentication auth) {
+        try {
+            String rol = auth.getAuthorities().iterator().next().getAuthority();
+            manageOrderUseCase.eliminarOrden(id, rol);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado: " + e.getMessage());
+        }
     }
 
 }

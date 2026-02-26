@@ -28,7 +28,6 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
         </processorPath>
         <module name="ms-notifications" />
-        <module name="ms-orders" />
       </profile>
       <profile name="Annotation profile for ms-auth" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -38,6 +37,15 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
         </processorPath>
         <module name="ms-auth" />
+      </profile>
+      <profile name="Annotation profile for ms-orders" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath>
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
+        </processorPath>
+        <module name="ms-orders" />
       </profile>
     </annotationProcessing>
   </component>

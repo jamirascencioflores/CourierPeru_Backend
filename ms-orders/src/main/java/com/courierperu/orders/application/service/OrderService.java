@@ -130,11 +130,37 @@ public class OrderService implements ManageOrderUseCase {
 
     @Override
     public List<Order> obtenerOrdenesPorRol(String username, String role) {
-        // Si es administrador, le damos todo el historial
+        // Si es administrador, le damos el historial completo
         if ("ADMIN".equals(role) || "ROLE_ADMIN".equals(role)) {
             return orderRepositoryPort.findAll();
         }
         // Si es cliente normal, solo le damos sus propias órdenes
         return orderRepositoryPort.findByUsuarioUsername(username);
+    }
+
+    @Override
+    public void eliminarOrden(Long id, String rol) {
+        Order order = orderRepositoryPort.findById(id)
+                .orElseThrow(() -> new RuntimeException("Orden no encontrada"));
+
+        // Validar regla de negocio
+        if (!rol.contains("ADMIN") && !"PENDIENTE".equalsIgnoreCase(order.getEstado())) {
+            throw new RuntimeException("Solo puedes cancelar órdenes en estado PENDIENTE.");
+        }
+
+        orderRepositoryPort.deleteById(id);
+    }
+
+    @Override
+    public Order actualizarEstado(Long id, String nuevoEstado, String rol) {
+        Order order = orderRepositoryPort.findById(id)
+                .orElseThrow(() -> new RuntimeException("Orden no encontrada"));
+
+        if (!rol.contains("ADMIN") && !"PENDIENTE".equalsIgnoreCase(order.getEstado())) {
+            throw new RuntimeException("No puedes editar una orden que ya está en proceso.");
+        }
+
+        order.setEstado(nuevoEstado);
+        return orderRepositoryPort.save(order);
     }
 }

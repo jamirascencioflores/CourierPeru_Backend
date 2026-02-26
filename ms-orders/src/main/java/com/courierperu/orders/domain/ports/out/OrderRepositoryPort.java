@@ -10,4 +10,6 @@ public interface OrderRepositoryPort {
     List<Order> findAll();
     Optional<Order> findByCodigoRastreo(String codigoRastreo);
     List<Order> findByUsuarioUsername(String username);
+
+    void deleteById(Long id);
 }

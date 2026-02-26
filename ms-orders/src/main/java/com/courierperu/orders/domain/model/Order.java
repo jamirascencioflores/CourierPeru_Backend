@@ -10,6 +10,7 @@ import java.util.UUID;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
+@Data
 public class Order {
 
     @Id

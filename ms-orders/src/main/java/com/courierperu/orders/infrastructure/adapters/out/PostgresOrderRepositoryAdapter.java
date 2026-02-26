@@ -40,4 +40,9 @@ public class PostgresOrderRepositoryAdapter implements OrderRepositoryPort {
     public List<Order> findByUsuarioUsername(String username) {
         return jpaRepository.findByUsuarioUsername(username);
     }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
+    }
 }
