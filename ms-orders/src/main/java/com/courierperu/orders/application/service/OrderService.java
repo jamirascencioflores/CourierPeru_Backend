@@ -163,4 +163,39 @@ public class OrderService implements ManageOrderUseCase {
         order.setEstado(nuevoEstado);
         return orderRepositoryPort.save(order);
     }
+
+    @Override
+    public Order editarOrden(Long id, Order ordenActualizada, String rol) {
+        Order order = orderRepositoryPort.findById(id)
+                .orElseThrow(() -> new RuntimeException("Orden no encontrada"));
+
+        boolean isAdmin = rol != null && rol.contains("ADMIN");
+
+        // Regla 1: Validar el estado
+        if (!isAdmin && !"PENDIENTE".equalsIgnoreCase(order.getEstado())) {
+            throw new RuntimeException("Solo puedes editar órdenes en estado PENDIENTE.");
+        }
+
+        // Regla 2: Actualizar campos básicos permitidos
+        order.setDireccionEntrega(ordenActualizada.getDireccionEntrega());
+        order.setDireccionRecojo(ordenActualizada.getDireccionRecojo());
+
+        // Regla 3: Si es ADMIN y el peso cambió, recalcular con MS-SHIPPING
+        if (isAdmin && ordenActualizada.getPesoPaquete() != null
+                && !ordenActualizada.getPesoPaquete().equals(order.getPesoPaquete())) {
+
+            order.setPesoPaquete(ordenActualizada.getPesoPaquete());
+            log.info("🚚 Recalculando costo por cambio de peso a: {} kg", order.getPesoPaquete());
+
+            try {
+                var rate = shippingFeignClient.calcular(order.getPesoPaquete());
+                order.setCostoEnvio(rate.costo());
+                log.info("💰 Nuevo costo asignado: S/ {}", rate.costo());
+            } catch (Exception e) {
+                log.error("❌ Error al recalcular costo con MS-SHIPPING", e);
+                throw new RuntimeException("No se pudo recalcular el costo de envío.");
+            }
+        }
+        return orderRepositoryPort.save(order);
+    }
 }

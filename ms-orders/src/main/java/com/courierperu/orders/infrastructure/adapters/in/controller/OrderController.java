@@ -6,14 +6,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.Authentication;
 
-import java.util.List; // Importar List
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
-
 public class OrderController {
 
     private final ManageOrderUseCase manageOrderUseCase;
@@ -21,17 +20,16 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<Order> create(
             @RequestBody Order order,
-            @RequestHeader(value = "X-User-Name", required = false) String username) { // ✨ Leemos quién la crea
-
-        order.setUsuarioUsername(username); // Asignamos el dueño de forma segura en el backend
+            @RequestHeader(value = "X-User-Name", required = false) String username) {
+        order.setUsuarioUsername(username);
         return new ResponseEntity<>(manageOrderUseCase.createOrder(order), HttpStatus.CREATED);
     }
 
     @GetMapping
     public ResponseEntity<List<Order>> getAll(
             @RequestHeader(value = "X-User-Role", required = false) String role,
-            @RequestHeader(value = "X-User-Name", required = false) String username) { // ✨ Leemos rol y usuario
-
+            @RequestHeader(value = "X-User-Name", required = false) String username) {
+        // ✨ La lógica de filtrar por rol ya está en tu Service (obtenerOrdenesPorRol)
         return ResponseEntity.ok(manageOrderUseCase.obtenerOrdenesPorRol(username, role));
     }
 
@@ -45,22 +43,27 @@ public class OrderController {
         return ResponseEntity.ok(manageOrderUseCase.consultarClientePorDni(dni));
     }
 
-    // PUT: Para EDITAR (Cambiar a EN_RUTA, ENTREGADO, etc.)
+    // ✨ MODIFICADO: Lee el rol desde el Header y maneja el JSON del Body correctamente
     @PutMapping("/{id}/estado")
-    public ResponseEntity<?> updateEstado(@PathVariable Long id, @RequestBody String estado, Authentication auth) {
+    public ResponseEntity<?> updateEstado(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body, // Recibimos un JSON en lugar de un String plano
+            @RequestHeader(value = "X-User-Role", defaultValue = "USER") String rol) {
         try {
-            String rol = auth.getAuthorities().iterator().next().getAuthority();
-            return ResponseEntity.ok(manageOrderUseCase.actualizarEstado(id, estado, rol));
+            // Extraemos el valor del estado (Angular debe enviar { "estado": "EN_RUTA" })
+            String nuevoEstado = body.getOrDefault("estado", body.values().iterator().next());
+            return ResponseEntity.ok(manageOrderUseCase.actualizarEstado(id, nuevoEstado, rol));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado: " + e.getMessage());
         }
     }
 
-    // DELETE: Para ELIMINAR de la base de datos
+    // ✨ MODIFICADO: Lee el rol desde el Header
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteOrder(@PathVariable Long id, Authentication auth) {
+    public ResponseEntity<?> deleteOrder(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Role", defaultValue = "USER") String rol) {
         try {
-            String rol = auth.getAuthorities().iterator().next().getAuthority();
             manageOrderUseCase.eliminarOrden(id, rol);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
@@ -68,4 +71,15 @@ public class OrderController {
         }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateOrder(
+            @PathVariable Long id,
+            @RequestBody Order orderRequest,
+            @RequestHeader(value = "X-User-Role", defaultValue = "USER") String rol) {
+        try {
+            return ResponseEntity.ok(manageOrderUseCase.editarOrden(id, orderRequest, rol));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Error al editar: " + e.getMessage());
+        }
+    }
 }

@@ -14,4 +14,5 @@ public interface ManageOrderUseCase {
 
     Order actualizarEstado(Long id, String estado, String rol);
     void eliminarOrden(Long id, String rol);
+    Order editarOrden(Long id, Order ordenActualizada, String rol);
 }
