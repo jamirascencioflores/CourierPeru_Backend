@@ -12,3 +12,4 @@ public interface ShippingFeignClient {
     @GetMapping("/api/shipping/calcular")
     ShippingRateDto calcular(@RequestParam("peso") Double peso);
 }
+

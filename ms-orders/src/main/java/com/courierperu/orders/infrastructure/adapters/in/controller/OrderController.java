@@ -43,14 +43,12 @@ public class OrderController {
         return ResponseEntity.ok(manageOrderUseCase.consultarClientePorDni(dni));
     }
 
-    // ✨ MODIFICADO: Lee el rol desde el Header y maneja el JSON del Body correctamente
     @PutMapping("/{id}/estado")
     public ResponseEntity<?> updateEstado(
             @PathVariable Long id,
-            @RequestBody Map<String, String> body, // Recibimos un JSON en lugar de un String plano
+            @RequestBody Map<String, String> body,
             @RequestHeader(value = "X-User-Role", defaultValue = "USER") String rol) {
         try {
-            // Extraemos el valor del estado (Angular debe enviar { "estado": "EN_RUTA" })
             String nuevoEstado = body.getOrDefault("estado", body.values().iterator().next());
             return ResponseEntity.ok(manageOrderUseCase.actualizarEstado(id, nuevoEstado, rol));
         } catch (RuntimeException e) {
